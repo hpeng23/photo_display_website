@@ -61,15 +61,25 @@ function App() {
         </button>
       )}
       <audio ref={audioRef} src={music} loop />
-      <div style={{ position: 'relative', width: 600, height: 400, margin: '40px auto', boxShadow: '0 4px 32px #0008', borderRadius: 16, overflow: 'hidden', background: '#111' }}>
+      <div style={{ position: 'relative', width: '100vw', height: '100vh', margin: 0, boxShadow: 'none', borderRadius: 0, overflow: 'hidden', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <img
           src={photos[current]}
           alt={`第${current + 1}张`}
-          style={{ width: '100%', height: '100%', objectFit: 'contain', transition: 'opacity 0.5s' }}
+          style={{
+            maxWidth: '100vw',
+            maxHeight: '100vh',
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            transition: 'opacity 0.5s',
+            display: 'block',
+            margin: '0 auto',
+            background: '#111',
+          }}
         />
-        <button onClick={prevPhoto} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 32, background: 'rgba(0,0,0,0.4)', color: '#fff', border: 'none', borderRadius: '50%', width: 48, height: 48, cursor: 'pointer' }}>&lt;</button>
-        <button onClick={nextPhoto} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 32, background: 'rgba(0,0,0,0.4)', color: '#fff', border: 'none', borderRadius: '50%', width: 48, height: 48, cursor: 'pointer' }}>&gt;</button>
-        <div style={{ position: 'absolute', bottom: 10, left: 0, width: '100%', textAlign: 'center', color: '#fff', fontSize: 18, letterSpacing: 2 }}>
+        <button onClick={prevPhoto} style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', fontSize: 48, background: 'rgba(0,0,0,0.4)', color: '#fff', border: 'none', borderRadius: '50%', width: 64, height: 64, cursor: 'pointer', zIndex: 2 }}>&lt;</button>
+        <button onClick={nextPhoto} style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', fontSize: 48, background: 'rgba(0,0,0,0.4)', color: '#fff', border: 'none', borderRadius: '50%', width: 64, height: 64, cursor: 'pointer', zIndex: 2 }}>&gt;</button>
+        <div style={{ position: 'absolute', bottom: 24, left: 0, width: '100%', textAlign: 'center', color: '#fff', fontSize: 24, letterSpacing: 2, textShadow: '0 2px 8px #000' }}>
           {current + 1} / {photos.length}
         </div>
       </div>
