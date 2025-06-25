@@ -138,6 +138,14 @@ function App() {
     return `${m}:${s}`;
   };
 
+  // 重置自动轮播计时
+  const resetInterval = () => {
+    clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % photoList.length);
+    }, 3500);
+  };
+
   // 切换上一张
   const prevPhoto = () => {
     setCurrent((prev) => (prev - 1 + photoList.length) % photoList.length);
@@ -147,13 +155,6 @@ function App() {
   const nextPhoto = () => {
     setCurrent((prev) => (prev + 1) % photoList.length);
     resetInterval();
-  };
-  // 重置自动轮播计时
-  const resetInterval = () => {
-    clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % photoList.length);
-    }, 3500);
   };
 
   // 切换上一首
