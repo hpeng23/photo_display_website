@@ -10,7 +10,7 @@ function App() {
   const [audioDuration, setAudioDuration] = useState(0);
   const [volume, setVolume] = useState(0.5);
   const [muted, setMuted] = useState(false);
-  const [audioBoxPos, setAudioBoxPos] = useState({ x: window.innerWidth - 380, y: 40 });
+  const [audioBoxPos, setAudioBoxPos] = useState({ x: Math.max(window.innerWidth - 430, 16), y: 0 });
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [audioBoxHidden, setAudioBoxHidden] = useState(false);
@@ -197,6 +197,20 @@ function App() {
     }
     // eslint-disable-next-line
   }, [musicIndex, musicList]);
+
+  // 隐藏播放器时重置图标到右上角
+  useEffect(() => {
+    if (audioBoxHidden) {
+      setAudioBoxPos({ x: window.innerWidth - 64, y: 5 });
+    }
+  }, [audioBoxHidden]);
+
+  // 展开播放器时重置到默认初始位置
+  useEffect(() => {
+    if (!audioBoxHidden) {
+      setAudioBoxPos({ x: Math.max(window.innerWidth - 430, 16), y: 0 });
+    }
+  }, [audioBoxHidden]);
 
   return (
     <div className="App" style={{ background: '#222', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
