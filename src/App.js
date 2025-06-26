@@ -61,7 +61,7 @@ function App() {
     };
   }, [musicList, musicIndex]);
 
-  // 拖动事件
+  // 拖动事件（PC+移动端）
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (dragging) {
@@ -72,13 +72,27 @@ function App() {
       }
     };
     const handleMouseUp = () => setDragging(false);
+    const handleTouchMove = (e) => {
+      if (dragging && e.touches.length === 1) {
+        setAudioBoxPos({
+          x: e.touches[0].clientX - dragOffset.x,
+          y: e.touches[0].clientY - dragOffset.y,
+        });
+        e.preventDefault();
+      }
+    };
+    const handleTouchEnd = () => setDragging(false);
     if (dragging) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('touchend', handleTouchEnd);
     }
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleTouchMove, { passive: false });
+      window.removeEventListener('touchend', handleTouchEnd);
     };
   }, [dragging, dragOffset]);
 
@@ -209,13 +223,26 @@ function App() {
               setDragging(true);
               const rect = audioBoxRef.current.getBoundingClientRect();
               setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-              // 记录起始坐标
               audioBoxRef.current._dragStart = { x: e.clientX, y: e.clientY };
             }}
             onMouseUp={e => {
-              // 判断是否为单击（移动距离很小）
               const start = audioBoxRef.current._dragStart;
               if (start && Math.abs(e.clientX - start.x) < 5 && Math.abs(e.clientY - start.y) < 5) {
+                setAudioBoxHidden(false);
+              }
+              audioBoxRef.current._dragStart = null;
+            }}
+            onTouchStart={e => {
+              if (e.touches.length === 1) {
+                setDragging(true);
+                const rect = audioBoxRef.current.getBoundingClientRect();
+                setDragOffset({ x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top });
+                audioBoxRef.current._dragStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+              }
+            }}
+            onTouchEnd={e => {
+              const start = audioBoxRef.current._dragStart;
+              if (start && e.changedTouches.length === 1 && Math.abs(e.changedTouches[0].clientX - start.x) < 5 && Math.abs(e.changedTouches[0].clientY - start.y) < 5) {
                 setAudioBoxHidden(false);
               }
               audioBoxRef.current._dragStart = null;
@@ -240,9 +267,9 @@ function App() {
             style={{
               background: '#fff',
               borderRadius: 10,
-              padding: 12,
-              minWidth: 260,
-              maxWidth: 320,
+              padding: '12px 24px 12px 12px',
+              minWidth: 300,
+              maxWidth: 380,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'stretch',
@@ -257,6 +284,13 @@ function App() {
                 setDragging(true);
                 const rect = audioBoxRef.current.getBoundingClientRect();
                 setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+              }}
+              onTouchStart={e => {
+                if (e.touches.length === 1) {
+                  setDragging(true);
+                  const rect = audioBoxRef.current.getBoundingClientRect();
+                  setDragOffset({ x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top });
+                }
               }}
             />
             {/* 右上角按钮分开布局 */}
@@ -279,7 +313,7 @@ function App() {
             <div style={{ fontStyle: 'italic', fontSize: 16, marginBottom: 4, color: '#222', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {musicList[musicIndex] ? musicList[musicIndex] : '无音乐'}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'nowrap' }}>
               <button onClick={prevMusic} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#222', marginRight: 2 }} title="上一首">
                 <FaStepBackward />
               </button>
@@ -301,18 +335,20 @@ function App() {
               <span style={{ fontSize: 14, color: '#222', minWidth: 60, textAlign: 'center' }}>
                 {formatTime(audioTime)} / {formatTime(audioDuration)}
               </span>
-              <button onClick={toggleMute} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#222', marginLeft: 4 }}>
-                {muted || volume === 0 ? <FaVolumeMute /> : <FaVolumeUp />}
-              </button>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.01}
-                value={volume}
-                onChange={handleVolume}
-                style={{ width: 50 }}
-              />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginLeft: 8, minWidth: 32 }}>
+                <button onClick={toggleMute} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#222', marginBottom: 2, padding: 0 }}>
+                  {muted || volume === 0 ? <FaVolumeMute /> : <FaVolumeUp />}
+                </button>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={volume}
+                  onChange={handleVolume}
+                  style={{ width: 8, height: 48, writingMode: 'bt-lr', WebkitAppearance: 'slider-vertical', margin: 0 }}
+                />
+              </div>
             </div>
             {/* 播放列表弹窗 */}
             {showPlaylist && (
