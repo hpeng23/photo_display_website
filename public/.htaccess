@@ -1,0 +1,28 @@
+# 音频文件MIME类型配置
+<IfModule mod_mime.c>
+    AddType audio/ogg .ogg
+    AddType audio/ogg .oga
+</IfModule>
+
+# 启用CORS
+<IfModule mod_headers.c>
+    <FilesMatch "\.(ogg|oga)$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Cache-Control "public, max-age=31536000"
+    </FilesMatch>
+</IfModule>
+
+# 启用压缩
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE audio/ogg
+</IfModule>
+
+# 单页应用路由支持
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    RewriteRule ^index\.html$ - [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . /index.html [L]
+</IfModule> 

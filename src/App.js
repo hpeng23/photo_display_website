@@ -17,10 +17,26 @@ function App() {
   const [musicList, setMusicList] = useState([]);
   const [musicIndex, setMusicIndex] = useState(0);
   const [showPlaylist, setShowPlaylist] = useState(false);
+  const [audioFormat, setAudioFormat] = useState('ogg'); // 添加音频格式状态
   const intervalRef = useRef(null);
   const audioRef = useRef(null);
   const audioBoxRef = useRef(null);
   console.log('musicList:', musicList, 'musicIndex:', musicIndex);
+
+  // 检测浏览器支持的音频格式
+  useEffect(() => {
+    const audio = document.createElement('audio');
+    if (audio.canPlayType && audio.canPlayType('audio/ogg; codecs="vorbis"').replace(/no/, '')) {
+      setAudioFormat('ogg');
+    } else if (audio.canPlayType && audio.canPlayType('audio/mpeg;').replace(/no/, '')) {
+      setAudioFormat('mp3');
+    } else if (audio.canPlayType && audio.canPlayType('audio/wav; codecs="1"').replace(/no/, '')) {
+      setAudioFormat('wav');
+    } else {
+      setAudioFormat('ogg'); // 默认使用ogg
+    }
+    console.log('检测到的音频格式支持:', audioFormat);
+  }, [audioFormat]);
 
   useEffect(() => {
     fetch('/assets.json')
@@ -49,15 +65,33 @@ function App() {
     const onLoadedMetadata = () => setAudioDuration(audio.duration);
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
+    const onError = (e) => {
+      console.error('音频加载错误:', e);
+      console.error('音频错误详情:', audio.error);
+      console.error('当前音频源:', audio.src);
+    };
+    const onLoadStart = () => console.log('开始加载音频:', audio.src);
+    const onCanPlay = () => console.log('音频可以播放:', audio.src);
+    const onCanPlayThrough = () => console.log('音频可以流畅播放:', audio.src);
+    
     audio.addEventListener('timeupdate', onTimeUpdate);
     audio.addEventListener('loadedmetadata', onLoadedMetadata);
     audio.addEventListener('play', onPlay);
     audio.addEventListener('pause', onPause);
+    audio.addEventListener('error', onError);
+    audio.addEventListener('loadstart', onLoadStart);
+    audio.addEventListener('canplay', onCanPlay);
+    audio.addEventListener('canplaythrough', onCanPlayThrough);
+    
     return () => {
       audio.removeEventListener('timeupdate', onTimeUpdate);
       audio.removeEventListener('loadedmetadata', onLoadedMetadata);
       audio.removeEventListener('play', onPlay);
       audio.removeEventListener('pause', onPause);
+      audio.removeEventListener('error', onError);
+      audio.removeEventListener('loadstart', onLoadStart);
+      audio.removeEventListener('canplay', onCanPlay);
+      audio.removeEventListener('canplaythrough', onCanPlayThrough);
     };
   }, [musicList, musicIndex]);
 
@@ -152,6 +186,28 @@ function App() {
     return `${m}:${s}`;
   };
 
+  // 调试音频文件访问
+  const testAudioAccess = async () => {
+    if (musicList.length === 0 || !musicList[musicIndex]) return;
+    
+    const audioUrl = `/music/${encodeURIComponent(musicList[musicIndex])}`;
+    console.log('测试音频文件访问:', audioUrl);
+    
+    try {
+      const response = await fetch(audioUrl, { method: 'HEAD' });
+      console.log('音频文件响应状态:', response.status);
+      console.log('音频文件响应头:', Object.fromEntries(response.headers.entries()));
+      
+      if (response.ok) {
+        console.log('✅ 音频文件可以访问');
+      } else {
+        console.error('❌ 音频文件无法访问:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('❌ 音频文件访问失败:', error);
+    }
+  };
+
   // 重置自动轮播计时
   const resetInterval = () => {
     clearInterval(intervalRef.current);
@@ -216,7 +272,14 @@ function App() {
     <div className="App" style={{ background: '#222', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       {/* 音频控件悬浮框 */}
       {musicList.length > 0 && musicList[musicIndex] && (
-        <audio ref={audioRef} src={`/music/${musicList[musicIndex]}`} loop preload="auto" style={{ display: 'none' }} />
+        <audio 
+          ref={audioRef} 
+          src={`/music/${encodeURIComponent(musicList[musicIndex])}`} 
+          loop 
+          preload="auto" 
+          style={{ display: 'none' }}
+          crossOrigin="anonymous"
+        />
       )}
       <div
         ref={audioBoxRef}
@@ -327,6 +390,23 @@ function App() {
             <div style={{ fontStyle: 'italic', fontSize: 16, marginBottom: 4, color: '#222', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {musicList[musicIndex] ? musicList[musicIndex] : '无音乐'}
             </div>
+            {/* 调试按钮 */}
+            <button 
+              onClick={testAudioAccess} 
+              style={{ 
+                background: '#f0f0f0', 
+                border: '1px solid #ccc', 
+                borderRadius: 4, 
+                padding: '4px 8px', 
+                fontSize: 12, 
+                cursor: 'pointer', 
+                marginBottom: 8,
+                color: '#666'
+              }}
+              title="测试音频文件访问"
+            >
+              调试音频
+            </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'nowrap' }}>
               <button onClick={prevMusic} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: '#222', marginRight: 2 }} title="上一首">
                 <FaStepBackward />
